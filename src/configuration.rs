@@ -6,7 +6,7 @@ use sqlx::ConnectOptions;
 #[derive(serde::Deserialize, Clone)]
 pub struct Settings {
     pub database: DatabaseSettings,
-    pub application_port: u16,
+    pub application: ApplicationSettings,
     pub email_client: EmailClientSettings, 
 }
 
@@ -64,4 +64,11 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     let mut settings = config::Config::default();
     settings.merge(config::File::with_name("configuration"))?;
     settings.try_into()
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct  ApplicationSettings {
+    pub port: u16,
+    pub host: String,
+    pub base_url: String
 }
