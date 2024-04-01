@@ -3073,6 +3073,7 @@ dependencies = [
  "serde 1.0.197",
  "serde_json",
  "sqlx",
+ "thiserror",
  "tokio",
  "tracing",
  "tracing-actix-web",
