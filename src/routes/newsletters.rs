@@ -8,7 +8,7 @@ use secrecy::{ExposeSecret, Secret};
 use actix_web::http::header::{HeaderMap, HeaderValue};
 use argon2::{Algorithm, Argon2, Params, PasswordHash, PasswordVerifier, Version};
 use uuid::Uuid;
-use crate::{domain::SubscriberEmail, email_client::{self, EmailClient}, routes::error_chain_fmt};
+use crate::{domain::SubscriberEmail, email_client::{self, EmailClient}, routes::error_chain_fmt, telemetry::spawn_blocking_with_tracing};
 
 #[derive(thiserror::Error)]
 pub enum PublishError {
@@ -179,7 +179,7 @@ async fn validate_credentials(
         .map_err(PublishError::UnexpectedError)?
         .ok_or_else(|| PublishError::AuthError(anyhow::anyhow!("Unknown username.")))?;
 
-    tokio::task::spawn_blocking(move || {
+    spawn_blocking_with_tracing(move || {
         verify_password_hash(
             expected_password_hash,
             credentials.password
@@ -187,13 +187,15 @@ async fn validate_credentials(
     })
     .await
     .context("Failed to spawn blocking task.")
-    .map_err(PublishError::UnexpectedError)?
-    .context("Invalid password")
-    .map_err(PublishError::AuthError)?;
+    .map_err(PublishError::UnexpectedError)??;
 
     Ok(user_id)
 }
 
+#[tracing::instrument(
+    name = "Verify password hash",
+    skip(expected_password_hash, password_candidate)
+)]
 fn verify_password_hash(
     expected_password_hash: Secret<String>,
     password_candidate: Secret<String>
