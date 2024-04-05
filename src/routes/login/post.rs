@@ -3,13 +3,10 @@ use actix_web::error::InternalError;
 use actix_web::{HttpResponse, ResponseError};
 use actix_web::http::header::LOCATION;
 use actix_web::web;
-use hmac::{Hmac, Mac};
-use reqwest::StatusCode;
 use secrecy::{Secret, ExposeSecret};
 use sqlx::PgPool;
 
 use crate::authentication::AuthError;
-use crate::startup::HmacSecret;
 use crate::{authentication::{validate_credentials, Credentials}, routes::error_chain_fmt};
 
 #[derive(serde::Deserialize)]
