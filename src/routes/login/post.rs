@@ -52,9 +52,9 @@ pub async fn login(
 
 #[derive(thiserror::Error)]
 pub enum LoginError {
-    #[error("Authentication failed.")]
+    #[error("Authentication failed")]
     AuthError(#[source] anyhow::Error),
-    #[error("Something went wrong.")]
+    #[error("Something went wrong")]
     UnexpectedError(#[from] anyhow::Error)
 }
 
