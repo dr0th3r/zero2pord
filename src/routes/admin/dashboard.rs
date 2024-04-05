@@ -1,6 +1,7 @@
 use actix_web::{http::header::ContentType, web, HttpResponse};
 use actix_session::Session;
 use anyhow::Context;
+use reqwest::header::LOCATION;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -21,7 +22,10 @@ pub async fn admin_dashboard(
     {
         get_username(user_id, &pool).await.map_err(e500)?
     } else {
-        todo!()
+        return Ok(HttpResponse::SeeOther()
+            .insert_header((LOCATION, "/login"))
+            .finish()
+        );
     };
     Ok(HttpResponse::Ok()
         .content_type(ContentType::html())
