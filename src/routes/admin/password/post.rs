@@ -17,6 +17,20 @@ pub async fn change_password(
     session: TypedSession,
     pool: web::Data<PgPool>
 ) -> Result<HttpResponse, actix_web::Error> {
+    if form.new_password.expose_secret().len() < 12 { //no need checking new password check because it must match
+        FlashMessage::error(
+            "New password must be at least 12 characters long."
+        )
+        .send();
+        return Ok(see_other("/admin/password"))
+    } else if form.new_password.expose_secret().len() > 128 {
+        FlashMessage::error(
+            "New password must be at most 128 characters long."
+        )
+        .send();
+        return Ok(see_other("/admin/password"))
+    }
+
     let user_id = session.get_user_id().map_err(e500)?;
     if user_id.is_none() {
         return Ok(see_other("/login"))
@@ -38,8 +52,8 @@ pub async fn change_password(
     if let Err(e) = validate_credentials(credentials, &pool).await {
         return match e {
             AuthError::InvalidCredentials(_) => {
-                FlashMessage::error("The current password is incorect.").send();
-                Ok(see_other("/adimn/password"))
+                FlashMessage::error("The current password is incorrect.").send();
+                Ok(see_other("/admin/password"))
             },
             AuthError::UnexpectedError(_) => Err(e500(e).into()),
         }
